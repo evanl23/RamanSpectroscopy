@@ -1,7 +1,6 @@
 import ramanspy
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 
 csv_file = "observed.csv"
 
@@ -18,11 +17,12 @@ try:
         # ramanspy.preprocessing.baseline.ASLS(),
     ])
     preprocessed = pipeline.apply(raman_spectrum) # Pre-processed spectrum
+    preprocessed_axis = preprocessed.spectral_axis
     preprocessed_data = preprocessed.spectral_data # Get pre-processed spectral data
 
     # Plot preprocessed and processed spectrum data
     plt.plot(spectral_axis, spectral_data, label="Raw")
-    plt.plot(spectral_axis, preprocessed_data, 'r', label="Pre-processed")
+    plt.plot(preprocessed_axis, preprocessed_data, 'r', label="Pre-processed")
     plt.legend()
     plt.title("Observed spectrum raw vs pre-processed")
     plt.xlabel("Raman shift wavenumber (cm⁻¹)")
