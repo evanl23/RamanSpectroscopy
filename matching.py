@@ -1,7 +1,6 @@
 import numpy as np
 from typing import List, Tuple
 from scipy.signal import correlate
-from preprocess import preprocessed_data, preprocessed_axis
 import pandas as pd
 import matplotlib.pyplot as plt
 import ast
@@ -64,8 +63,13 @@ def match_library( observed: np.ndarray,
     match.sort(key=lambda x: x[1], reverse=True)
     return match[:top_n]
 
-observed = preprocessed_data
+# Read observed spectrum data from csv file
+observed_data_path = "observed_preprocessed.csv"
+data = pd.read_csv(observed_data_path)
+observed = (data["Intensity"]).to_numpy()
+preprocessed_axis = (data["Wavenumber"]).to_numpy()
 
+# Read library spectrum data from csv file
 csv_file = "library.csv"
 library_csv = pd.read_csv(csv_file)
 library_csv["wavenumber"] = library_csv["wavenumber"].apply(ast.literal_eval) # Convert string to array
