@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-csv_file = "observed.csv"
+csv_file = "csv_files/observed.csv"
 
 try:
     data = pd.read_csv(csv_file)
@@ -35,7 +35,7 @@ try:
 
     data = np.column_stack((preprocessed_axis, preprocessed_data)) # Combine into 2D array
     header="Wavenumber,Intensity"
-    np.savetxt("observed_preprocessed.csv", data, delimiter=",", header=header, comments='') # Save preprocessed data as csv file
+    np.savetxt("csv_files/observed_preprocessed.csv", data, delimiter=",", header=header, comments='') # Save preprocessed data as csv file
 
 except FileNotFoundError as e:
     print(f"Incorrect file path or CSV file does not exist: {e}")

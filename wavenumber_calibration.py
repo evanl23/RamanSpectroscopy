@@ -3,7 +3,7 @@ import cv2 as cv
 from scipy.stats import linregress
 from scipy.signal import find_peaks
 
-ethanol_observed = cv.imread("ethanol_observed.png")
+ethanol_observed = cv.imread("img/ethanol_observed.png")
 assert ethanol_observed is not None, "File cannot be read, check path is correct and file exists."
 
 spectrum = np.mean(ethanol_observed, axis=0) # Collapse on X-axis to show intensity

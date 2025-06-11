@@ -3,7 +3,7 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 from wavenumber_calibration import slope, intercept
 
-observed_img_path = "isopropanol.png"
+observed_img_path = "img/isopropanol.png"
 img = cv.imread(observed_img_path) # Load image
 assert img is not None, "File could not be read. Check if file exists"
 
@@ -31,4 +31,4 @@ plt.show()
 
 data = np.column_stack((wavenumbers, averaged)) # Match intensity with wavenumber
 header = "Wavenumber,Intensity"
-np.savetxt("observed.csv", data, delimiter=",", header=header, comments='') # Save processed image data as csv file
+np.savetxt("csv_files/observed.csv", data, delimiter=",", header=header, comments='') # Save processed image data as csv file

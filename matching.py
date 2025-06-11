@@ -64,13 +64,13 @@ def match_library( observed: np.ndarray,
     return match[:top_n]
 
 # Read observed spectrum data from csv file
-observed_data_path = "observed_preprocessed.csv"
+observed_data_path = "csv_files/observed_preprocessed.csv"
 data = pd.read_csv(observed_data_path)
 observed = (data["Intensity"]).to_numpy()
 preprocessed_axis = (data["Wavenumber"]).to_numpy()
 
 # Read library spectrum data from csv file
-csv_file = "library.csv"
+csv_file = "csv_files/library.csv"
 library_csv = pd.read_csv(csv_file)
 library_csv["wavenumber"] = library_csv["wavenumber"].apply(ast.literal_eval) # Convert string to array
 library_csv["intensity"] = library_csv["intensity"].apply(ast.literal_eval) # Convert string to array
