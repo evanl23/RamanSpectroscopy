@@ -33,7 +33,7 @@ try:
     plt.ylabel("Intensity (arb)")
     plt.show()
 
-    data = np.column_stack(preprocessed_axis, preprocessed_data) # Combine into 2D array
+    data = np.column_stack((preprocessed_axis, preprocessed_data)) # Combine into 2D array
     header="Wavenumber,Intensity"
     np.savetxt("observed_preprocessed.csv", data, delimiter=",", header=header, comments='') # Save preprocessed data as csv file
 
