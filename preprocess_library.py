@@ -21,7 +21,7 @@ def preprocess(spectral_data: np.ndarray,
     preprocessed_data = preprocessed.spectral_data # Get pre-processed spectral data
     return preprocessed_data, preprocessed_axis
 
-data = pd.read_csv("csv_files/raman_spectra_api_compounds.csv") # Load raw data
+data = pd.read_csv("csv_files/raman_spectra_api_compounds.psd") # Load raw data
 column = data.pop("label")
 data.insert(loc=0, column="label", value=column) # Move label column to column position 0
 
@@ -41,4 +41,4 @@ for substance, intensity in library:
     new_intensities.append(preprocessed.tolist())
 data["intensity"] = new_intensities # Update data
 
-data.to_csv("csv_files/library.csv", index=False)
+data.to_csv("csv_files/library.psd", index=False)
