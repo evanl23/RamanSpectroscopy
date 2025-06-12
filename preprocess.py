@@ -18,19 +18,26 @@ try:
     # Pipeline object for preprocessing
     pipeline = ramanspy.preprocessing.Pipeline([
         ramanspy.preprocessing.denoise.SavGol(window_length=7, polyorder=2),
-        # ramanspy.preprocessing.baseline.ASLS(), NOTE: baseline correction??
+        ramanspy.preprocessing.baseline.ASLS(), #NOTE: baseline correction??
+        ramanspy.preprocessing.normalise.MinMax()
     ])
     preprocessed = pipeline.apply(raman_spectrum) # Preprocess spectrum
     preprocessed_axis = preprocessed.spectral_axis # Get pre-processed spectral axis (wavenumbers)
     preprocessed_data = preprocessed.spectral_data # Get pre-processed spectral data
 
-    # Plot preprocessed and processed spectrum data
-    plt.plot(spectral_axis, spectral_data, label="Raw")
-    plt.plot(preprocessed_axis, preprocessed_data, 'r', label="Pre-processed")
-    plt.legend()
-    plt.title("Observed spectrum raw vs pre-processed")
-    plt.xlabel("Raman shift wavenumber (cm⁻¹)")
-    plt.ylabel("Intensity (arb)")
+    # Plot raw and preprocessed spectrum data
+    fig, (one,two) = plt.subplots(1,2, figsize=(10,5))
+
+    one.plot(spectral_axis, spectral_data, 'b', label="Raw")
+    one.set_title("Raw spectrum")
+    one.set_xlabel("Raman shift wavenumber (cm⁻¹)")
+    one.set_ylabel("Intensity (arb)")
+
+    two.plot(preprocessed_axis, preprocessed_data, 'r', label="Pre-processed")
+    two.set_title("Pre-processed spectrum")
+    two.set_xlabel("Raman shift wavenumber (cm⁻¹)")
+    two.set_ylabel("Intensity (arb)")
+
     plt.show()
 
     data = np.column_stack((preprocessed_axis, preprocessed_data)) # Combine into 2D array
