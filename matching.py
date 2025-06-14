@@ -35,7 +35,7 @@ def cross_correlation(a: np.ndarray, b: np.ndarray) -> float:
     return np.max(correlation)
 
 def match_library( observed: np.ndarray, 
-                   library: List[Tuple[str, np.ndarray, np.ndarray]], 
+                   library: List[Tuple[str, np.ndarray]], 
                    top_n: int = 5) -> List[Tuple[str, float, np.ndarray, np.ndarray]]:
     """
     Compare observed spectrum to a library and return top-N matches. 
@@ -51,14 +51,13 @@ def match_library( observed: np.ndarray,
         List of (label, similarity score, wavenumber, spectrum), sorted by score descending
     """
     match = []
-    for label, wavenumber, ref_spectrum in library:
-        assert len(wavenumber)==len(observed), "Length of observed and library spectrum not equal."
+    for label, ref_spectrum in library:
         score = cosine_similarity(observed, ref_spectrum)
         # Similarity threshold
         if score < 0.8:
             pass
         else:
-            match.append((label, score, wavenumber, ref_spectrum))
+            match.append((label, score, ref_spectrum))
     # Sort by descending similarity
     match.sort(key=lambda x: x[1], reverse=True)
     return match[:top_n]
@@ -69,18 +68,24 @@ data = pd.read_csv(observed_data_path)
 observed = (data["Intensity"]).to_numpy()
 preprocessed_axis = (data["Wavenumber"]).to_numpy()
 
-# Read library spectrum data from csv file
-csv_file = "csv_files/library.csv"
-library_csv = pd.read_csv(csv_file)
-library_csv["wavenumber"] = library_csv["wavenumber"].apply(ast.literal_eval) # Convert string to array
-library_csv["intensity"] = library_csv["intensity"].apply(ast.literal_eval) # Convert string to array
-library = list(library_csv.itertuples(index=False, name=None)) # Convert csv library to list of tuples List[(substance, wavenumber, intensity)]
+# Read wavenumber data from csv file
+wavenumber_csv = "csv_files/wavenumbers.csv"
+wavenumber = pd.read_csv(wavenumber_csv)
+wavenumbers = (wavenumber["wavenumber"]).to_numpy() # Convert df into array
 
+# Read library spectrum data from csv file
+csv_file = "csv_files/library.psd"
+library_csv = pd.read_csv(csv_file)
+library_csv["intensity"] = library_csv["intensity"].apply(ast.literal_eval) # Convert string to array
+library = list(library_csv.itertuples(index=False, name=None)) # Convert csv library to list of tuples List[(substance, intensity)]
+
+# Make sure wavenumbers match in element and length 
+assert len(wavenumbers)==len(observed), "Length of observed and library spectrum not equal."
 scores = match_library(observed, library, top_n=3)
 
-for label, score, wave, intensity in scores:
+for label, score, intensity in scores:
     print(f"{label}: similarity = {score:.4f}") # Print to 4 decimals
-    plt.plot(wave, intensity, label, alpha=0.5)
+    plt.plot(wavenumbers, intensity, label, alpha=0.5)
 
 plt.plot(preprocessed_axis, observed, 'g', label="Observed")
 plt.title("Observed spectrum matched against library")
