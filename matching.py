@@ -79,8 +79,14 @@ library_csv = pd.read_csv(csv_file)
 library_csv["intensity"] = library_csv["intensity"].apply(ast.literal_eval) # Convert string to array
 library = list(library_csv.itertuples(index=False, name=None)) # Convert csv library to list of tuples List[(substance, intensity)]
 
-# Make sure wavenumbers match in element and length 
-assert len(wavenumbers)==len(observed), "Length of observed and library spectrum not equal."
+# Interpolates observed intensity values to match the reference axis.
+if len(wavenumbers) != len(observed):     
+    # Ensure axis is sorted
+    assert np.all(np.diff(preprocessed_axis) > 0), "Observed axis must be increasing"
+    assert np.all(np.diff(wavenumbers) > 0), "Reference axis must be increasing"
+    # Interpolate to match reference
+    observed = np.interp(wavenumbers, preprocessed_axis, observed)
+
 scores = match_library(observed, library, top_n=3)
 
 for label, score, intensity in scores:
