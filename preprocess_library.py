@@ -27,9 +27,11 @@ data.insert(loc=0, column="label", value=column) # Move label column to column p
 
 intensity_columns = data.columns.drop("label")
 data["intensity"] = data[intensity_columns].values.tolist() # Convert all intensities to an array
+data["intensity"] = data["intensity"].apply(lambda x: x[50:1651]) # Only select fingerprint region (200 to 1800 cm⁻¹)
 data = data[["label", "intensity"]] # Only keep label and intensity array columns
 
 wavenumbers = [float(col) for col in intensity_columns] # Convert wavenumbers into array
+wavenumbers = wavenumbers[50:1651] # Only select fingerprint region (200 to 1800 cm⁻¹)
 header = "wavenumber"
 np.savetxt("csv_files/wavenumbers.csv", wavenumbers, header=header, delimiter=",", comments='') # Save wavenumbers as separate csv file
 
