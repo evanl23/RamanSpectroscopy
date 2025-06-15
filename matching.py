@@ -4,6 +4,7 @@ from scipy.signal import correlate
 import pandas as pd
 import matplotlib.pyplot as plt
 import ast
+from scipy.interpolate import interp1d
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     """
@@ -91,9 +92,9 @@ scores = match_library(observed, library, top_n=3)
 
 for label, score, intensity in scores:
     print(f"{label}: similarity = {score:.4f}") # Print to 4 decimals
-    plt.plot(wavenumbers, intensity, label, alpha=0.5)
+    plt.plot(wavenumbers, intensity, label=label, alpha=0.5)
 
-plt.plot(preprocessed_axis, observed, 'g', label="Observed")
+plt.plot(wavenumbers, observed, 'g', label="Observed")
 plt.title("Observed spectrum matched against library")
 plt.ylabel("Intensity (arb)")
 plt.xlabel("Raman shift wavenumber (cm⁻¹)")
