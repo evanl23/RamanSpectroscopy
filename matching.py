@@ -4,7 +4,6 @@ from scipy.signal import correlate
 import pandas as pd
 import matplotlib.pyplot as plt
 import ast
-from scipy.interpolate import interp1d
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     """
@@ -55,7 +54,7 @@ def match_library( observed: np.ndarray,
     for label, ref_spectrum in library:
         score = cosine_similarity(observed, ref_spectrum)
         # Similarity threshold
-        if score < 0.8:
+        if score < 0.6:
             pass
         else:
             match.append((label, score, ref_spectrum))
@@ -80,14 +79,7 @@ library_csv = pd.read_csv(csv_file)
 library_csv["intensity"] = library_csv["intensity"].apply(ast.literal_eval) # Convert string to array
 library = list(library_csv.itertuples(index=False, name=None)) # Convert csv library to list of tuples List[(substance, intensity)]
 
-# Interpolates observed intensity values to match the reference axis.
-if len(wavenumbers) != len(observed):     
-    # Ensure axis is sorted
-    assert np.all(np.diff(preprocessed_axis) > 0), "Observed axis must be increasing"
-    assert np.all(np.diff(wavenumbers) > 0), "Reference axis must be increasing"
-    # Interpolate to match reference
-    observed = np.interp(wavenumbers, preprocessed_axis, observed)
-
+assert len(wavenumbers) == len(observed), "Length of observed and library spectrum not equal."
 scores = match_library(observed, library, top_n=3)
 
 for label, score, intensity in scores:
