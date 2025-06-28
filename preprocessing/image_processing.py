@@ -2,7 +2,7 @@ import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
-from wavenumber_calibration import slope, intercept
+from preprocessing.wavenumber_calibration import slope, intercept
 
 observed_img_path = "img/isopropanol.png"
 img = cv.imread(observed_img_path) # Load image
