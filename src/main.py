@@ -1,14 +1,30 @@
+import os
+
+# Imports for ASGI
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
-import numpy as np
+
+# Imports for array processing
 import cv2 as cv
-import ramanspy
-from ramanspy.utils import wavelength_to_wavenumber
+import numpy as np
 from scipy.interpolate import interp1d
 from scipy.stats import linregress
 from scipy.signal import find_peaks
 
+# Imports for raman preprocessing
+import ramanspy
+from ramanspy.utils import wavelength_to_wavenumber
+
+# Imports for vector DB
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import PointStruct, VectorParams, Distance, SearchRequest
+
 app = FastAPI()
+
+qdrant_client = QdrantClient(
+    url="https://cfb7b44e-4b8a-440d-ac31-9ddc410c618f.us-west-2-0.aws.cloud.qdrant.io:6333", 
+    api_key=os.getenv("qdrant_api_key"),
+)
 
 # Global calibration values
 calibration = {
@@ -18,17 +34,25 @@ calibration = {
 }
 
 """
-    Helper methods for pixel to wavenumber conversion
+    Helper methods
 """
 def pixel_to_wavelength(pixels: np.ndarray, slope: int, intercept: int) -> np.ndarray:
     return slope * pixels + intercept
+
+async def qdrant_query(query: np.ndarray, collection_name: str, top_k: int = 5) -> list:
+    results = await qdrant_client.query_points(
+        collection_name=collection_name,
+        query=query.tolist(),
+        limit=top_k  # Return k closest points
+    )
+    return results
 
 @app.post("/process-image")
 async def upload_img(img: UploadFile = File(...)):
     """
         Upload observed image for a substance.
     """
-    contents = await img.read()
+    contents = await img.read() # Load image
     np_arr = np.frombuffer(contents, np.uint8)
     img = cv.imdecode(np_arr, cv.IMREAD_COLOR)
     if img is None:
@@ -60,15 +84,17 @@ async def upload_img(img: UploadFile = File(...)):
     preprocessed_axis = preprocessed.spectral_axis # Get pre-processed spectral axis (wavenumbers)
     preprocessed_data = preprocessed.spectral_data # Get pre-processed spectral data
 
+    hits = await qdrant_query(preprocessed_data, "raman_library", 5) # Query qdrant for 5 closest raman vectors
+    matches = [{"id": h.id, "score": h.score, "payload": h.payload} for h in hits]
+
     return {
-        "index": preprocessed_axis.tolist(),
-        "vector": preprocessed_data.tolist(),
-        "shape": len(preprocessed_data)
+        "matches": matches,
+        "vector_shape": len(preprocessed_data)
     }
 
 @app.post("/calibration")
 async def calibrate(img: UploadFile, laser_wavelength: int):
-    contents = await img.read()
+    contents = await img.read() # Load image
     np_arr = np.frombuffer(contents, np.uint8)
     ethanol_observed = cv.imdecode(np_arr, cv.IMREAD_COLOR)
     if ethanol_observed is None:
@@ -94,3 +120,5 @@ async def calibrate(img: UploadFile, laser_wavelength: int):
     calibration["slope"] = slope
     calibration["intercept"] = intercept
     calibration["laser_wavelength"] = laser_wavelength
+
+    return {"calibrated_slope": slope, "calibrated_intercept": intercept, "excitation_wavelength": laser_wavelength}
