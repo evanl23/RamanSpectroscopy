@@ -1,4 +1,7 @@
+# Load environment variables from .env
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Imports for ASGI
 from fastapi import FastAPI, File, UploadFile
@@ -39,8 +42,8 @@ calibration = {
 def pixel_to_wavelength(pixels: np.ndarray, slope: int, intercept: int) -> np.ndarray:
     return slope * pixels + intercept
 
-async def qdrant_query(query: np.ndarray, collection_name: str, top_k: int = 5) -> list:
-    results = await qdrant_client.query_points(
+async def qdrant_query(query: np.ndarray, collection_name: str, top_k: int = 5) -> dict:
+    results = qdrant_client.query_points(
         collection_name=collection_name,
         query=query.tolist(),
         limit=top_k  # Return k closest points
@@ -84,11 +87,12 @@ async def upload_img(img: UploadFile = File(...)):
     preprocessed_axis = preprocessed.spectral_axis # Get pre-processed spectral axis (wavenumbers)
     preprocessed_data = preprocessed.spectral_data # Get pre-processed spectral data
 
-    hits = await qdrant_query(preprocessed_data, "raman_library", 5) # Query qdrant for 5 closest raman vectors
-    matches = [{"id": h.id, "score": h.score, "payload": h.payload} for h in hits]
+    matches = await qdrant_query(preprocessed_data, "raman_library", 5) # Query qdrant for 5 closest raman vectors
+    points = matches.points
+    hits = [{"id": p.id, "score": p.score, "payload": p.payload} for p in points]
 
     return {
-        "matches": matches,
+        "matches": hits,
         "vector_shape": len(preprocessed_data)
     }
 
