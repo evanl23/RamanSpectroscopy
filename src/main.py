@@ -138,7 +138,7 @@ async def upload_img(img: UploadFile = File(...)):
     compounds = []
     for h in hits:
         meta = get_metadata(h["payload"]["s3_key"])
-        compounds.append(meta)
+        compounds.append({h["payload"]["substance"]: meta})
 
     # Put observed image in S3 bucket
 
