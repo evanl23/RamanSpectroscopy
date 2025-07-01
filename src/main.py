@@ -68,18 +68,30 @@ def get_metadata(s3_key: str) -> dict:
         print(e)
         return {}
     
-def put_metadata(s3_key: str, data: json) -> bool:
+def put_metadata(s3_key: str, data: dict) -> bool:
     s3 = boto3.client('s3')
     try:
         s3.put_object(
             Body=json.dumps(data),
             Bucket='raman-spectra-bucket',
-            Key=s3_key
+            Key=s3_key,
+            ContentType='application/json'
         )
     except ClientError as e:
         print(e)
         return False
     return True
+
+def metadata_exists(s3_key: str) -> bool:
+    s3 = boto3.client('s3')
+    try:
+        s3.head_object(Bucket='raman-spectra-bucket', Key=s3_key)
+        return True
+    except ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            return False
+        else:
+            raise
 
 @app.post("/process-image")
 async def upload_img(img: UploadFile = File(...)):
@@ -184,4 +196,27 @@ for idx, (label, ref_spectrum) in library:
             )
         ],
     )
+"""
+
+# Add meta data information for each unique compound
+"""
+import pandas as pd
+csv_file = "csv_files/library.psd"
+library_csv = pd.read_csv(csv_file)
+unique_labels = library_csv["label"].unique()
+print(len(unique_labels))
+for label in unique_labels:
+    s3_key = f"{label}.json"
+    # Check if compound already exists in S3. Some compounds have more than 1 spectra. Only add one meta data for each unique name
+    if metadata_exists(s3_key):
+            continue
+    # If not present, add to S3
+    data = {
+        "molecular_formula": None,
+        "molar_mass": None,
+        "boiling_point": None,
+        "licensing": None,
+        "full_resolution_spectra": None,
+    }
+    put_metadata(s3_key, data)
 """
