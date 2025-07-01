@@ -22,6 +22,12 @@ from ramanspy.utils import wavelength_to_wavenumber
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct, VectorParams, Distance, SearchRequest
 
+# Set up aws
+import json
+import boto3
+from botocore.exceptions import ClientError
+s3 = boto3.resource('s3')
+
 app = FastAPI()
 
 qdrant_client = QdrantClient(
@@ -49,6 +55,31 @@ async def qdrant_query(query: np.ndarray, collection_name: str, top_k: int = 5) 
         limit=top_k  # Return k closest points
     )
     return results
+
+def get_metadata(s3_key: str) -> dict:
+    s3 = boto3.client('s3')
+    try: 
+        obj = s3.get_object(
+            Bucket='raman-spectra-bucket',
+            Key=s3_key
+        )
+        return json.loads(obj['Body'].read())
+    except ClientError as e:
+        print(e)
+        return {}
+    
+def put_metadata(s3_key: str, data: json) -> bool:
+    s3 = boto3.client('s3')
+    try:
+        s3.put_object(
+            Body=json.dumps(data),
+            Bucket='raman-spectra-bucket',
+            Key=s3_key
+        )
+    except ClientError as e:
+        print(e)
+        return False
+    return True
 
 @app.post("/process-image")
 async def upload_img(img: UploadFile = File(...)):
@@ -91,9 +122,16 @@ async def upload_img(img: UploadFile = File(...)):
     points = matches.points
     hits = [{"id": p.id, "score": p.score, "payload": p.payload} for p in points]
 
+    # Fetch meta data (chemical properties) from S3
+    compounds = []
+    for h in hits:
+        meta = get_metadata(h["payload"]["s3_key"])
+        compounds.append(meta)
+
+    # Put observed image in S3 bucket
+
     return {
-        "matches": hits,
-        "vector_shape": len(preprocessed_data)
+        "closest_compounds": compounds,
     }
 
 @app.post("/calibration")
@@ -126,3 +164,24 @@ async def calibrate(img: UploadFile, laser_wavelength: int):
     calibration["laser_wavelength"] = laser_wavelength
 
     return {"calibrated_slope": slope, "calibrated_intercept": intercept, "excitation_wavelength": laser_wavelength}
+    
+# Read library spectrum data from csv file
+"""
+import pandas as pd
+import ast
+csv_file = "csv_files/library.psd"
+library_csv = pd.read_csv(csv_file)
+library_csv["intensity"] = library_csv["intensity"].apply(ast.literal_eval) # Convert string to array
+library = list(library_csv.itertuples(index=False, name=None)) # Convert csv library to list of tuples List[(substance, intensity)]
+for idx, (label, ref_spectrum) in library:
+    qdrant_client.upsert(
+        collection_name="raman_library",
+        points=[
+            PointStruct(
+                id=idx,
+                vector=ref_spectrum,
+                payload={"substance": label, "s3_key": f"{label}.json"},
+            )
+        ],
+    )
+"""
