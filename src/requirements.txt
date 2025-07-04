@@ -1,0 +1,10 @@
+boto3
+fastapi
+numpy
+opencv-python
+python-dotenv
+python-multipart
+qdrant-client
+ramanspy
+scipy
+uvicorn
