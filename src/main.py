@@ -176,6 +176,10 @@ async def calibrate(img: UploadFile, laser_wavelength: int):
     calibration["laser_wavelength"] = laser_wavelength
 
     return {"calibrated_slope": slope, "calibrated_intercept": intercept, "excitation_wavelength": laser_wavelength}
+
+@app.get("/health")
+def health():
+    return {"status": "Application healthy"}
     
 # Read library spectrum data from csv file
 """
