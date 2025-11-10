@@ -3,6 +3,12 @@ import pandas as pd
 import ramanspy
 from typing import Tuple
 
+"""
+    From csv file, convert each individual internsity to an array of intensities per substance. 
+    Extract the range of wavenumbers and save as csv file. 
+    Preprocess library. Savitzky-Golay filter for baseline denoising, ASLS baseline correction, and MinMax normalization. 
+"""
+
 # NOTE: length of spectrum must all be the same, and the same as observed
 
 def preprocess(spectral_data: np.ndarray, 

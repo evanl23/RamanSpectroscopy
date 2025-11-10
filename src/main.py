@@ -148,6 +148,11 @@ async def upload_img(img: UploadFile = File(...)):
 
 @app.post("/calibration")
 async def calibrate(img: UploadFile, laser_wavelength: int):
+    """
+        FastAPI route for calibrating the system. 
+        Inputs an observed spectrum, most commonly Ethonol, and compare the peaks of this observed with the peaks of a known spectrum taken from literature. 
+        The goal of this is to derive an equation that maps observed pixels to actual wavenumber. 
+    """
     contents = await img.read() # Load image
     np_arr = np.frombuffer(contents, np.uint8)
     ethanol_observed = cv.imdecode(np_arr, cv.IMREAD_COLOR)
